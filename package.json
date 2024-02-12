@@ -1,0 +1,11 @@
+{
+  "name": "toko-baju",
+  "version": "1.0.0",
+  "description": "Tugas buat Week 3 Toko Baju",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "BajuBuddies Team11",
+  "license": "ISC"
+}
