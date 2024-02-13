@@ -9,7 +9,9 @@
   "author": "BajuBuddies Team11",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "express-fileupload": "^1.4.3"
+    "express-fileupload": "^1.4.3",
+    "joi": "^17.12.1"
   }
 }
