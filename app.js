@@ -2,6 +2,16 @@ const express = require('express')
 const app = express()
 const port = 3000
 const path = require('path')
+const fileUpload = require('express-fileupload')
+const joi = require('joi')
+const fs = require('fs')
+let cors = require('cors')
+
+app.use(cors())
+app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use(fileUpload())
 
 let userToko = [
   {
@@ -100,8 +110,23 @@ let ProdukBaju = [
 
 // Bagian Produk
 // Get Produk
-app.get('/produk', (req, res) => {
+const validateProduct = (product) => {
+  const schema = joi.object({
+    name: joi.string().min(3).required(),
+    description: joi.string().min(3).required(),
+    price: joi.number().required(),
+  })
 
+  return schema.validate(product)
+}
+
+
+app.get('/', (req, res) => {
+  res.send('Selamat Datang di Toko onglen')
+})
+
+app.get('/produk', (req, res) => {
+  
 })
 
 // Get Detail Produk
