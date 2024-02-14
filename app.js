@@ -17,7 +17,7 @@ let userToko = [
   {
     id: 1,
     username: "john_doe",
-    foto_profil: "john_doe.jpg",
+    foto_profil: "/images/john_doe.jpg",
     nama_lengkap: "John Doe",
     password: "password123",
     email: "john@example.com",
@@ -26,7 +26,7 @@ let userToko = [
   {
     id: 2,
     username: "jane_smith",
-    foto_profil: "jane_smith.jpg",
+    foto_profil: "/images/jane_smith.jpg",
     nama_lengkap: "Jane Smith",
     password: "qwerty456",
     email: "jane@example.com",
@@ -35,7 +35,7 @@ let userToko = [
   {
     id: 3,
     username: "alex_brown",
-    foto_profil: "alex_brown.jpg",
+    foto_profil: "/images/alex_brown.jpg",
     nama_lengkap: "Alex Brown",
     password: "abc123xyz",
     email: "alex@example.com",
@@ -44,7 +44,7 @@ let userToko = [
   {
     id: 4,
     username: "emily_jones",
-    foto_profil: "emily_jones.jpg",
+    foto_profil: "/images/emily_jones.jpg",
     nama_lengkap: "Emily Jones",
     password: "pass1234",
     email: "emily@example.com",
@@ -53,7 +53,7 @@ let userToko = [
   {
     id: 5,
     username: "mike_williams",
-    foto_profil: "mike_williams.jpg",
+    foto_profil: "/images/mike_williams.jpg",
     nama_lengkap: "Mike Williams",
     password: "password789",
     email: "mike@example.com",
@@ -69,7 +69,7 @@ let ProdukBaju = [
     stok: 50,
     harga: 250000,
     desc: "Kemeja denim slim fit dengan desain modern.",
-    gambar: "Kemeja Denim Slim Fit.jpg",
+    gambar: "/images/Kemeja_Denim_Slim_Fit.jpg",
   },
   {
     id: 2,
@@ -77,7 +77,7 @@ let ProdukBaju = [
     stok: 100,
     harga: 75000,
     desc: "Kaos polos dengan bahan katun berkualitas tinggi.",
-    gambar: "Kaos Polos Basic.jpg",
+    gambar: "/images/Kaos_Polos_Basic.jpg",
   },
   {
     id: 3,
@@ -85,7 +85,7 @@ let ProdukBaju = [
     stok: 30,
     harga: 500000,
     desc: "Jaket parka dengan lapisan waterproof untuk perlindungan maksimal dari cuaca.",
-    gambar: "Jaket Parka Waterproof.jpg",
+    gambar: "/images/Jaket_Parka_Waterproof.jpg",
   },
   {
     id: 4,
@@ -93,7 +93,7 @@ let ProdukBaju = [
     stok: 40,
     harga: 300000,
     desc: "Celana jeans slim fit yang nyaman dipakai sehari-hari.",
-    gambar: "Celana Jeans Slim Fit.jpg",
+    gambar: "/images/Celana_Jeans_Slim_Fit.jpg",
   },
   {
     id: 5,
@@ -101,7 +101,7 @@ let ProdukBaju = [
     stok: 20,
     harga: 200000,
     desc: "Hoodie fleeced sweatshirt dengan desain casual yang stylish.",
-    gambar: "Hoodie Fleeced Sweatshirt.jpg",
+    gambar: "/images/Hoodie_Fleeced_Sweatshirt.jpg",
   }
 ];
 
@@ -146,7 +146,7 @@ app.get('/produk', (req, res) => {
   }
 
   res.status(200).json({
-    messages: "Success Get Detail Data",
+    messages: "Success Get All Data Produk",
     data: ProdukBaju
   })
 })
@@ -186,9 +186,18 @@ app.post('/produk', (req, res) => {
     })
   }
 
-  const image = req.files.image
-  const filename = `${name}.jpg`
+  if (!req.files.image) {
+    return res.status(400).json({
+      messages: "Image is required"
+    });
+  }
 
+  const image = req.files.image
+
+  
+  // const filename = `${name}.jpg`
+  const filename = `${name.replace(/\s/g, '_')}.jpg`;
+  
   image.mv(path.join(__dirname, 'public/images', filename))
 
   const newProduct = {
@@ -246,10 +255,12 @@ app.put('/produk/:id', (req, res) => {
     }catch(err) {
       console.log(err)
     }
-    const filename = `${name}.jpg`
+    // const filename = `${name}.jpg`
+    const filename = `${name.replace(/\s/g, '_')}.jpg`;
     // image.mv(path.join(__dirname, 'public/images', filename))
     console.log(image.mv(path.join(__dirname, 'public/images', filename)))
-    product.gambar = `${filename}`
+    product.gambar = `/images/${filename}`
+    
   }
 
   
@@ -304,11 +315,161 @@ const validateUser = (user) => {
 
 // Get Data User
 app.get('/user', (req, res) => {
+
+  const username = req.query.username
+  
+  if(username) {
+    const user = userToko.find(item => item.username.toLowerCase() === username.toLowerCase());
+
+    if (!username){
+      return res.status(404).json({
+        messages : "Data Not Found"
+      })
+    }
+
+    return res.status(200).json({
+      messages: "Success Get Detail Data",
+      data: user
+    })
+  }
+
   res.status(200).json({
     messages: "Success Get All Data User",
     data: userToko
   })
 })
+
+app.get('/user/:id', (req, res) => {
+  const id = req.params.id
+  const user = userToko.find(user => user.id == id)
+
+  if(!user){
+    res.status(404).json({
+      messages : "Data Not Found"
+    })
+  }
+
+  res.status(200).json({
+    messages : "Get Detailed Product",
+    data : user
+  })
+  
+})
+
+
+app.post('/user', (req, res) => {
+  const id = userToko.length() + 1
+  const {username, nama_lengkap, password, email, role} = req.body
+
+  const {error} = validateUser(req.body)
+
+  if(error) {
+    return res.status(400).json({
+      messages: error.details[0].message
+    })
+  }
+
+  const image = req.files.foto_profil
+  const filename = `${username}.jpg`
+
+  image.mv(path.join(__dirname, 'public/images', filename))
+
+  const newUser = {
+    id,
+    nama_lengkap,
+    username,
+    password,
+    email,
+    role,
+    foto_profil:  `public/images/${filename}`,
+  }
+
+  console.log(newUser)
+
+  userToko.push(newUser)
+
+  res.status(201).json({
+    messages: "Success Add Data",
+    data: newUser
+  })
+})
+
+
+
+// edit user
+app.put('/user/:id', (req, res) => {
+  const id = req.params.id
+  const {username, nama_lengkap, email, password, role} = req.body
+
+  const {error} = validateUser(req.body)
+
+  if(error) {
+    return res.status(400).json({
+      messages: error.details[0].message
+    })
+  }
+
+  const user = userToko.find(user => user.id == id)
+
+  if(!user) {
+    return res.status(404).json({
+      messages: "Data Not Found"
+    })
+  }
+
+  const fileNameOld = `${user.foto_profil}.jpg`
+  user.username = username
+  user.nama_lengkap = nama_lengkap
+  user.email = email
+  user.role = role
+  user.password = password
+
+  const image = req.files.image
+
+  if(image) {
+    try{
+      fs.unlinkSync(path.join(__dirname, 'public/images', fileNameOld))
+    }catch(err) {
+      console.log(err)
+    }
+    // const filename = `${name}.jpg`
+    const filename = `${username.replace(/\s/g, '_')}.jpg`;
+    // image.mv(path.join(__dirname, 'public/images', filename))
+    console.log(image.mv(path.join(__dirname, 'public/images', filename)))
+    product.gambar = `/images/${filename}`
+    
+  }
+
+  
+
+  res.status(200).json({
+    messages: "Success Update Data",
+    data: product
+  })
+})
+
+
+// delete user
+app.delete('/produk/:id', (req, res) => {
+  const id = req.params.id
+
+  const user = userToko.find(data => data.id == id)
+
+  if(!product) {
+    return res.status(404).json({
+      messages: "Data Not Found"
+    })
+  }
+
+  const index = userToko.indexOf(product)
+  userToko.splice(index, 1)
+
+  res.status(200).json({
+    messages: "Success Delete Data",
+    data: user
+  })
+})
+
 
 
 
