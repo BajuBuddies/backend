@@ -64,44 +64,44 @@ let userToko = [
 
 let ProdukBaju = [
   {
-    id_produk: 1,
-    nama_produk: "Kemeja Denim Slim Fit",
+    id: 1,
+    nama: "Kemeja Denim Slim Fit",
     stok: 50,
     harga: 250000,
-    deskripsi_barang: "Kemeja denim slim fit dengan desain modern.",
-    gambar: "kemeja_denim_slim_fit.jpg",
+    desc: "Kemeja denim slim fit dengan desain modern.",
+    gambar: "Kemeja Denim Slim Fit.jpg",
   },
   {
-    id_produk: 2,
-    nama_produk: "Kaos Polos Basic",
+    id: 2,
+    nama: "Kaos Polos Basic",
     stok: 100,
     harga: 75000,
-    deskripsi_barang: "Kaos polos dengan bahan katun berkualitas tinggi.",
-    gambar: "kaos_polos_basic.jpg",
+    desc: "Kaos polos dengan bahan katun berkualitas tinggi.",
+    gambar: "Kaos Polos Basic.jpg",
   },
   {
-    id_produk: 3,
-    nama_produk: "Jaket Parka Waterproof",
+    id: 3,
+    nama: "Jaket Parka Waterproof",
     stok: 30,
     harga: 500000,
-    deskripsi_barang: "Jaket parka dengan lapisan waterproof untuk perlindungan maksimal dari cuaca.",
-    gambar: "jaket_parka_waterproof.jpg",
+    desc: "Jaket parka dengan lapisan waterproof untuk perlindungan maksimal dari cuaca.",
+    gambar: "Jaket Parka Waterproof.jpg",
   },
   {
-    id_produk: 4,
-    nama_produk: "Celana Jeans Slim Fit",
+    id: 4,
+    nama: "Celana Jeans Slim Fit",
     stok: 40,
     harga: 300000,
-    deskripsi_barang: "Celana jeans slim fit yang nyaman dipakai sehari-hari.",
-    gambar: "celana_jeans_slim_fit.jpg",
+    desc: "Celana jeans slim fit yang nyaman dipakai sehari-hari.",
+    gambar: "Celana Jeans Slim Fit.jpg",
   },
   {
-    id_produk: 5,
-    nama_produk: "Hoodie Fleeced Sweatshirt",
+    id: 5,
+    nama: "Hoodie Fleeced Sweatshirt",
     stok: 20,
     harga: 200000,
-    deskripsi_barang: "Hoodie fleeced sweatshirt dengan desain casual yang stylish.",
-    gambar: "hoodie_fleeced_sweatshirt.jpg",
+    desc: "Hoodie fleeced sweatshirt dengan desain casual yang stylish.",
+    gambar: "Hoodie Fleeced Sweatshirt.jpg",
   }
 ];
 
@@ -113,8 +113,9 @@ let ProdukBaju = [
 const validateProduct = (product) => {
   const schema = joi.object({
     name: joi.string().min(3).required(),
-    description: joi.string().min(3).required(),
-    price: joi.number().required(),
+    desc: joi.string().min(3).required(),
+    stok: joi.number().required(),
+    harga: joi.number().required(),
   })
 
   return schema.validate(product)
@@ -122,39 +123,195 @@ const validateProduct = (product) => {
 
 
 app.get('/', (req, res) => {
-  res.send('Selamat Datang di Toko onglen')
+  res.send('Test Toko Baju, Koneksi Berhasil')
 })
 
 app.get('/produk', (req, res) => {
+  // Ambil query atau data dari url /produk?name=
+  const name = req.query.name
   
+  if(name) {
+    const produk = ProdukBaju.find(item => item.nama.toLowerCase() === name.toLowerCase());
+
+    if (!produk){
+      return res.status(404).json({
+        messages : "Data Not Found"
+      })
+    }
+
+    return res.status(200).json({
+      messages: "Success Get Detail Data",
+      data: produk
+    })
+  }
+
+  res.status(200).json({
+    messages: "Success Get Detail Data",
+    data: ProdukBaju
+  })
 })
 
 // Get Detail Produk
 app.get('/produk/:id', (req, res) => {
-  res.send('Ini Page Product') 
+  const id = req.params.id
+
+  const produk = ProdukBaju.find(produk => produk.id == id)
+
+  if(!produk){
+    res.status(404).json({
+      messages : "Data Not Found"
+    })
+  }
+
+  res.status(200).json({
+    messages : "Get Detailed Product",
+    data : produk
+  })
 })
 
 
-// Add Produk
+
+
+// Add Produk atau Tambah Produk
 app.post('/produk', (req, res) => {
-  res.send('Ini Page Product') 
+  const {name, desc, harga, stok} = req.body
+
+  const id = ProdukBaju.length + 1;
+
+  const {error} = validateProduct(req.body)
+
+  if(error) {
+    return res.status(400).json({
+      messages: error.details[0].message
+    })
+  }
+
+  const image = req.files.image
+  const filename = `${name}.jpg`
+
+  image.mv(path.join(__dirname, 'public/images', filename))
+
+  const newProduct = {
+    id,
+    name,
+    stok,
+    harga,
+    desc,
+    gambar:  `/images/${filename}`,
+  }
+
+  console.log(newProduct)
+
+  ProdukBaju.push(newProduct)
+
+  res.status(201).json({
+    messages: "Success Add Data",
+    data: newProduct
+  })
 })
 
 
 // edit produk
-app.put('/produk', (req, res) => {
-  res.send('Ini Page Product') 
+app.put('/produk/:id', (req, res) => {
+  const id = req.params.id
+  const {name, desc, harga, stok} = req.body
+
+  const {error} = validateProduct(req.body)
+
+  if(error) {
+    return res.status(400).json({
+      messages: error.details[0].message
+    })
+  }
+
+  const product = ProdukBaju.find(product => product.id == id)
+
+  if(!product) {
+    return res.status(404).json({
+      messages: "Data Not Found"
+    })
+  }
+
+  const fileNameOld = `${product.nama}.jpg`
+  product.nama = name
+  product.desc = desc
+  product.harga = harga
+  product.stok = stok
+
+  const image = req.files.image
+
+  if(image) {
+    try{
+      fs.unlinkSync(path.join(__dirname, 'public/images', fileNameOld))
+    }catch(err) {
+      console.log(err)
+    }
+    const filename = `${name}.jpg`
+    // image.mv(path.join(__dirname, 'public/images', filename))
+    console.log(image.mv(path.join(__dirname, 'public/images', filename)))
+    product.gambar = `${filename}`
+  }
+
+  
+
+  res.status(200).json({
+    messages: "Success Update Data",
+    data: product
+  })
 })
 
 
 // delete produk
-app.delete('/produk', (req, res) => {
-  res.send('Ini Page Product') 
+app.delete('/produk/:id', (req, res) => {
+  const id = req.params.id
+
+  const product = ProdukBaju.find(product => product.id == id)
+
+  if(!product) {
+    return res.status(404).json({
+      messages: "Data Not Found"
+    })
+  }
+
+  const index = ProdukBaju.indexOf(product)
+  ProdukBaju.splice(index, 1)
+
+  res.status(200).json({
+    messages: "Success Delete Data",
+    data: product
+  })
+})
+
+app.get('/gambar', (req, res) => {
+  // Mengirim file gambar ke client
+  res.sendFile(path.join(__dirname, 'public/images', 'tank.jpg'));
+});
+
+// Bagian User
+
+const validateUser = (user) => {
+  const schema = joi.object({
+    nama_lengkap: joi.string().min(3).required(),
+    username: joi.string().min(3).required(),
+    password: joi.string().required(),
+    email: joi.string().required(),
+    role: joi.string().required(),
+  })
+
+  return schema.validate(user)
+}
+
+
+// Get Data User
+app.get('/user', (req, res) => {
+  res.status(200).json({
+    messages: "Success Get All Data User",
+    data: userToko
+  })
 })
 
 
 
-// Bagian User
 
 
 // Untuk Koneksiin ke localhost:3000
