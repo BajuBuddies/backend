@@ -358,7 +358,7 @@ app.get('/user/:id', (req, res) => {
 
 
 app.post('/user', (req, res) => {
-  const id = userToko.length() + 1
+  const id = userToko.length + 1
   const {username, nama_lengkap, password, email, role} = req.body
 
   const {error} = validateUser(req.body)
@@ -436,7 +436,7 @@ app.put('/user/:id', (req, res) => {
     const filename = `${username.replace(/\s/g, '_')}.jpg`;
     // image.mv(path.join(__dirname, 'public/images', filename))
     console.log(image.mv(path.join(__dirname, 'public/images', filename)))
-    product.gambar = `/images/${filename}`
+    user.gambar = `/images/${filename}`
     
   }
 
@@ -444,24 +444,24 @@ app.put('/user/:id', (req, res) => {
 
   res.status(200).json({
     messages: "Success Update Data",
-    data: product
+    data: user
   })
 })
 
 
 // delete user
-app.delete('/produk/:id', (req, res) => {
+app.delete('/user/:id', (req, res) => {
   const id = req.params.id
 
   const user = userToko.find(data => data.id == id)
 
-  if(!product) {
+  if(!user) {
     return res.status(404).json({
       messages: "Data Not Found"
     })
   }
 
-  const index = userToko.indexOf(product)
+  const index = userToko.indexOf(user)
   userToko.splice(index, 1)
 
   res.status(200).json({
